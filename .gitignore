@@ -44,7 +44,6 @@ desktop.ini
 *.swp
 *.swo
 
-# Keep tokenizer and vectorizer (small)
+# Keep DL model and tokenizer
 !data/tokenizer.pkl
-!models/tfidf_vectorizer.pkl
-!models/baseline_lr_model.pkl
+!models/bilstm_sentiment_model.keras

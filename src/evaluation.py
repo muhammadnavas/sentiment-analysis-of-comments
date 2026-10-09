@@ -103,7 +103,7 @@ def plot_confusion_matrix(
     y_true: np.ndarray,
     y_pred: np.ndarray,
     model_name: str = "BiLSTM",
-    filename: str = "08_confusion_matrix_dl.png",
+    filename: str = "04_confusion_matrix_dl.png",
 ) -> None:
     """Plots a styled confusion matrix with percentage annotations."""
     cm = confusion_matrix(y_true, y_pred)
@@ -113,7 +113,7 @@ def plot_confusion_matrix(
     cm_pct = cm.astype(float) / cm.sum(axis=1, keepdims=True) * 100
 
     fig, ax = plt.subplots(figsize=(7, 5))
-    im = ax.imshow(cm, cmap="Blues", aspect="auto")
+    im = ax.imshow(cm, cmap="Greens", aspect="auto")
     plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
     for i in range(2):
@@ -143,16 +143,16 @@ def plot_roc_curve(
     y_true: np.ndarray,
     y_prob: np.ndarray,
     model_name: str = "BiLSTM",
-    filename: str = "09_roc_auc_curve.png",
+    filename: str = "05_roc_auc_curve.png",
 ) -> None:
     """Plots and saves the ROC-AUC curve."""
     fpr, tpr, _ = roc_curve(y_true, y_prob)
     auc_score   = roc_auc_score(y_true, y_prob)
 
     fig, ax = plt.subplots(figsize=(7, 5))
-    ax.plot(fpr, tpr, "b-", linewidth=2.5, label=f"{model_name} (AUC = {auc_score:.4f})")
+    ax.plot(fpr, tpr, color="#16a34a", linewidth=2.5, label=f"{model_name} (AUC = {auc_score:.4f})")
     ax.plot([0, 1], [0, 1], "k--", linewidth=1.2, label="Random Classifier (AUC = 0.5)")
-    ax.fill_between(fpr, tpr, alpha=0.15, color="blue")
+    ax.fill_between(fpr, tpr, alpha=0.15, color="#16a34a")
     ax.set_xlabel("False Positive Rate", fontsize=12)
     ax.set_ylabel("True Positive Rate", fontsize=12)
     ax.set_title("ROC Curve — Sentiment Classifier", fontsize=13)
@@ -162,66 +162,7 @@ def plot_roc_curve(
 
 
 # ─────────────────────────────────────────────
-# 4. Baseline vs. DL Model Comparison
-# ─────────────────────────────────────────────
-
-def plot_model_comparison(
-    baseline_metrics: dict,
-    dl_metrics: dict,
-    filename: str = "10_model_comparison.png",
-) -> None:
-    """
-    Side-by-side grouped bar chart comparing Baseline (LR)
-    vs. Deep Learning (BiLSTM) across all key metrics.
-    """
-    metrics   = ["Accuracy", "Precision", "Recall", "F1 Score"]
-    baseline  = [
-        baseline_metrics["accuracy"],
-        baseline_metrics["precision"],
-        baseline_metrics["recall"],
-        baseline_metrics["f1"],
-    ]
-    dl_values = [
-        dl_metrics["accuracy"],
-        dl_metrics["precision"],
-        dl_metrics["recall"],
-        dl_metrics["f1"],
-    ]
-
-    x     = np.arange(len(metrics))
-    width = 0.32
-
-    fig, ax = plt.subplots(figsize=(9, 5))
-    bars1 = ax.bar(x - width / 2, baseline,  width, label="Baseline (TF-IDF + LR)", color="#3498db", alpha=0.85, edgecolor="white")
-    bars2 = ax.bar(x + width / 2, dl_values, width, label="BiLSTM (Deep Learning)", color="#e67e22", alpha=0.85, edgecolor="white")
-
-    for bars in [bars1, bars2]:
-        for bar in bars:
-            h = bar.get_height()
-            ax.annotate(
-                f"{h:.3f}",
-                xy=(bar.get_x() + bar.get_width() / 2, h),
-                xytext=(0, 4), textcoords="offset points",
-                ha="center", va="bottom", fontsize=9, fontweight="bold"
-            )
-
-    ax.set_xticks(x)
-    ax.set_xticklabels(metrics, fontsize=11)
-    ax.set_ylabel("Score", fontsize=11)
-    ax.set_ylim(0.5, 1.05)
-    ax.set_title("Model Comparison — Baseline vs. Deep Learning", fontsize=13, pad=12)
-    ax.legend(fontsize=10)
-    ax.yaxis.set_major_formatter(
-        plt.FuncFormatter(lambda y, _: f"{y:.0%}")
-    )
-    ax.axhline(y=0.9, color="gray", linestyle="--", linewidth=0.8, alpha=0.7)
-
-    _save(fig, filename)
-    print("[Eval] Model comparison chart saved.")
-
-
-# ─────────────────────────────────────────────
-# 5. Full Evaluation Pipeline
+# 4. Full Evaluation Pipeline
 # ─────────────────────────────────────────────
 
 def evaluate_dl_model(

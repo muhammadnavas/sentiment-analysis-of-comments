@@ -8,6 +8,7 @@ Live demo: single comment prediction + model metrics dashboard.
 import os
 import sys
 import re
+import json
 import pickle
 import numpy as np
 import pandas as pd
@@ -36,8 +37,6 @@ MODEL_PATH_KERAS    = os.path.join(os.path.dirname(__file__), "models", "bilstm_
 MODEL_PATH_H5       = os.path.join(os.path.dirname(__file__), "models", "bilstm_sentiment_model.h5")
 MODEL_PATH          = MODEL_PATH_KERAS if os.path.exists(MODEL_PATH_KERAS) else MODEL_PATH_H5
 TOKENIZER_PATH      = os.path.join(os.path.dirname(__file__), "data",   "tokenizer.pkl")
-BASELINE_MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "baseline_lr_model.pkl")
-VECTORIZER_PATH     = os.path.join(os.path.dirname(__file__), "models", "tfidf_vectorizer.pkl")
 PLOTS_DIR           = os.path.join(os.path.dirname(__file__), "plots")
 MAX_SEQ_LEN         = 250
 
@@ -476,8 +475,7 @@ st.markdown("""
 
 if not model_ready:
     st.warning(
-        "⚠️ **Model not found.** Please train the model first by running `python src/train.py`. "
-        "The app will work in demo mode with simulated results.",
+        "⚠️ **Model not found.** Please train the model first by running `python src/train.py`.",
         icon="⚠️"
     )
 
@@ -548,20 +546,12 @@ if "🔍 Live Analysis" in page:
     comment_text = st.session_state["user_text"]
 
     if analyze_btn and comment_text.strip():
-        with st.spinner("Analyzing sentiment..."):
-            if model_ready:
-                result = predict_sentiment(comment_text, models_bundle, engine)
-            else:
-                # Demo mode
-                import random
-                prob   = random.uniform(0.6, 0.95)
-                is_pos = random.random() > 0.5
-                if not is_pos: prob = 1 - prob
-                result = {
-                    "label": "Positive" if is_pos else "Negative",
-                    "confidence": max(prob, 1 - prob),
-                    "probability": prob,
-                }
+        if not model_ready:
+            st.error("❌ Deep Learning model not found. Please train the model first by running `python src/train.py`.")
+            st.stop()
+
+        with st.spinner("Analyzing sentiment with BiLSTM..."):
+            result = predict_sentiment(comment_text, models_bundle, engine)
 
         is_positive = result["label"] == "Positive"
 
@@ -619,70 +609,71 @@ if "🔍 Live Analysis" in page:
 # ═══════════════════════════════════════════════
 elif "📊 Model Dashboard" in page:
 
-    st.markdown("## 📊 Model Performance Dashboard")
+    st.markdown("## 📊 BiLSTM Deep Learning Performance Dashboard")
     st.markdown(
         "<p style='color:rgba(255,255,255,0.6);'>"
-        "Key evaluation metrics comparing the Baseline (TF-IDF + LR) vs. Deep Learning (BiLSTM) models."
+        "Key evaluation metrics and architecture breakdown for the Bidirectional LSTM model."
         "</p>", unsafe_allow_html=True
     )
 
-    # Metrics (update these after training with actual values)
-    baseline = {"Accuracy": 89.2, "Precision": 89.3, "Recall": 89.2, "F1 Score": 89.2, "ROC-AUC": 95.8}
-    bilstm   = {"Accuracy": 92.7, "Precision": 92.8, "Recall": 92.7, "F1 Score": 92.7, "ROC-AUC": 97.9}
+    metrics_path = os.path.join(os.path.dirname(__file__), "models", "evaluation_metrics.json")
+    if os.path.exists(metrics_path):
+        with open(metrics_path, "r") as f:
+            metrics_data = json.load(f)
+            dl_metrics = {
+                "Accuracy": metrics_data.get("Accuracy", 0.0),
+                "Precision": metrics_data.get("Precision", 0.0),
+                "Recall": metrics_data.get("Recall", 0.0),
+                "F1 Score": metrics_data.get("F1 Score", 0.0),
+                "ROC-AUC": metrics_data.get("ROC-AUC", 0.0),
+            }
+            sample_count = metrics_data.get("Evaluated_Samples", 5000)
+    else:
+        st.error("❌ Evaluation metrics file (models/evaluation_metrics.json) not found.")
+        st.stop()
 
-    st.markdown("#### 🏆 Test Set Performance")
+    st.markdown(f"#### 🏆 Test Set Performance (Evaluated on {sample_count:,} Real Samples)")
     m_cols = st.columns(5)
-    labels = list(baseline.keys())
+    labels = list(dl_metrics.keys())
     for i, (col, metric) in enumerate(zip(m_cols, labels)):
         with col:
-            delta = bilstm[metric] - baseline[metric]
             st.markdown(f"""<div class='metric-card'>
-                <div class='metric-value'>{bilstm[metric]:.1f}%</div>
+                <div class='metric-value'>{dl_metrics[metric]:.1f}%</div>
                 <div class='metric-label'>{metric}</div>
                 <div style='color:#10b981; font-size:0.8rem; margin-top:4px;'>
-                    ▲ +{delta:.1f}% vs baseline
+                    Test Score
                 </div>
             </div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Comparison bar chart
-    st.markdown("#### 📊 Baseline vs. BiLSTM Comparison")
+    # BiLSTM Performance bar chart
+    st.markdown("#### 📊 Evaluation Metrics Overview")
     fig = go.Figure()
-    fig.add_trace(go.Bar(
-        name="Baseline (TF-IDF + LR)",
-        x=labels,
-        y=[baseline[k] for k in labels],
-        marker_color="#3b82f6",
-        marker_line_width=0,
-        text=[f"{baseline[k]:.1f}%" for k in labels],
-        textposition="inside",
-        textfont=dict(color="white", size=12),
-    ))
     fig.add_trace(go.Bar(
         name="BiLSTM (Deep Learning)",
         x=labels,
-        y=[bilstm[k] for k in labels],
-        marker_color="#f59e0b",
-        marker_line_width=0,
-        text=[f"{bilstm[k]:.1f}%" for k in labels],
+        y=[dl_metrics[k] for k in labels],
+        marker=dict(
+            color=["#3b82f6", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b"],
+            line=dict(color="rgba(255,255,255,0.2)", width=1)
+        ),
+        text=[f"{dl_metrics[k]:.1f}%" for k in labels],
         textposition="inside",
-        textfont=dict(color="white", size=12),
+        textfont=dict(color="white", size=13),
     ))
     fig.update_layout(
-        barmode="group",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="white"),
-        legend=dict(font=dict(color="white"), bgcolor="rgba(255,255,255,0.05)"),
         yaxis=dict(
-            range=[80, 100],
+            range=[80, 102],
             title="Score (%)",
             gridcolor="rgba(255,255,255,0.08)",
             ticksuffix="%",
         ),
-        xaxis=dict(title="Metric"),
-        height=380,
+        xaxis=dict(title="Evaluation Metric"),
+        height=360,
         margin=dict(l=20, r=20, t=20, b=20),
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
@@ -704,7 +695,7 @@ elif "📈 Training Plots" in page:
 
     st.markdown("## 📈 Training & Evaluation Plots")
     st.markdown(
-        "<p style='color:rgba(255,255,255,0.6);'>All plots generated during training and EDA.</p>",
+        "<p style='color:rgba(255,255,255,0.6);'>All plots generated during BiLSTM training and EDA.</p>",
         unsafe_allow_html=True
     )
 
@@ -720,13 +711,11 @@ elif "📈 Training Plots" in page:
         )
     else:
         plot_names = {
-            "01_class_distribution.png":        "Class Distribution",
-            "02_wordclouds.png":                "Word Clouds (Positive vs Negative)",
-            "03_confusion_matrix_baseline.png": "Confusion Matrix — Baseline (TF-IDF + LR)",
-            "04_training_curves.png":           "BiLSTM Training & Validation Curves",
-            "05_confusion_matrix_dl.png":       "Confusion Matrix — BiLSTM Deep Learning",
-            "06_roc_auc_curve.png":             "ROC-AUC Curves",
-            "07_model_comparison.png":          "Model Comparison (Baseline vs BiLSTM)",
+            "01_class_distribution.png":  "Class Distribution",
+            "02_wordclouds.png":          "Word Clouds (Positive vs Negative)",
+            "03_training_curves.png":     "BiLSTM Training & Validation Curves",
+            "04_confusion_matrix_dl.png": "Confusion Matrix — BiLSTM Deep Learning",
+            "05_roc_auc_curve.png":       "ROC-AUC Curve — BiLSTM Deep Learning",
         }
 
         cols = st.columns(2)

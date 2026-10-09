@@ -25,9 +25,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 from data_ingestion import load_data
 from preprocessing  import run_preprocessing
 from eda            import run_eda
-from baseline_model import run_baseline
 from dl_model       import run_dl_training
-from evaluation     import evaluate_dl_model, compute_metrics, plot_model_comparison
+from evaluation     import evaluate_dl_model, compute_metrics
 
 
 def parse_args():
@@ -93,24 +92,10 @@ def main():
     data = run_preprocessing(df)
 
     # ────────────────────────────────────────────────────
-    # STEP 4: Baseline Model
+    # STEP 4: Deep Learning Model
     # ────────────────────────────────────────────────────
     print("\n" + "━" * 60)
-    print("STEP 4 / 5 : Baseline Model (TF-IDF + Logistic Regression)")
-    print("━" * 60)
-    baseline_results = run_baseline(data)
-    baseline_metrics = {
-        "accuracy":  baseline_results["test_accuracy"],
-        "precision": baseline_results.get("test_precision", baseline_results["test_accuracy"]),
-        "recall":    baseline_results.get("test_recall",    baseline_results["test_accuracy"]),
-        "f1":        baseline_results["test_f1"],
-    }
-
-    # ────────────────────────────────────────────────────
-    # STEP 5: Deep Learning Model
-    # ────────────────────────────────────────────────────
-    print("\n" + "━" * 60)
-    print("STEP 5 / 5 : Deep Learning Model (Bidirectional LSTM)")
+    print("STEP 4 / 4 : Deep Learning Model (Bidirectional LSTM)")
     print("━" * 60)
     dl_result = run_dl_training(data, epochs=args.epochs, batch_size=args.batch_size)
     dl_model   = dl_result["model"]
@@ -118,20 +103,11 @@ def main():
     # Full evaluation on test set
     dl_metrics = evaluate_dl_model(dl_model, data["X_test"], data["y_test"])
 
-    # ────────────────────────────────────────────────────
-    # Final Comparison
-    # ────────────────────────────────────────────────────
-    print("\n" + "━" * 60)
-    print("FINAL COMPARISON — Baseline vs. Deep Learning")
-    print("━" * 60)
-    plot_model_comparison(baseline_metrics, dl_metrics)
-
     elapsed = time.time() - total_start
     print(f"\n✅  Full pipeline complete in {elapsed/60:.1f} minutes.\n")
     print("┌─────────────────────────────────────────┐")
     print("│         FINAL RESULTS SUMMARY           │")
     print("├──────────────────────────┬──────────────┤")
-    print(f"│ Baseline Accuracy        │  {baseline_metrics['accuracy']*100:>6.2f}%    │")
     print(f"│ BiLSTM Accuracy          │  {dl_metrics['accuracy']*100:>6.2f}%    │")
     print(f"│ BiLSTM F1 Score          │  {dl_metrics['f1']:>8.4f}    │")
     if dl_metrics.get("roc_auc"):
