@@ -104,21 +104,18 @@ def build_bilstm_model(
 
         # ── Layer 3: Bidirectional LSTM ───────────────────────────
         Bidirectional(
-            LSTM(lstm_units_1, return_sequences=True, recurrent_dropout=0.1),
+            LSTM(64, return_sequences=True, dropout=0.2),
             name="bilstm_layer",
         ),
 
-        # ── Layer 4: Second LSTM ──────────────────────────────────
-        LSTM(lstm_units_2, recurrent_dropout=0.1, name="lstm_layer"),
+        # ── Layer 4: Global Max Pooling (extracts strongest signals) ──
+        GlobalMaxPooling1D(name="global_max_pool"),
 
-        # ── Layer 5: Batch Normalization ──────────────────────────
-        BatchNormalization(name="batch_norm"),
-
-        # ── Layer 6: Dense hidden layer ───────────────────────────
+        # ── Layer 5: Dense hidden layer ───────────────────────────
         Dense(dense_units, activation="relu", name="dense_hidden"),
         Dropout(dropout_rate, name="dropout"),
 
-        # ── Layer 7: Output ───────────────────────────────────────
+        # ── Layer 6: Output ───────────────────────────────────────
         Dense(1, activation="sigmoid", name="output"),
     ], name="BiLSTM_Sentiment_Classifier")
 
@@ -235,7 +232,7 @@ def train_model(
 
 def plot_training_curves(
     history: tf.keras.callbacks.History,
-    filename: str = "07_training_curves.png",
+    filename: str = "02_training_curves.png",
 ) -> None:
     """
     Plots and saves training vs. validation loss and accuracy curves.

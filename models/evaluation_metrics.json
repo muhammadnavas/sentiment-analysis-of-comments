@@ -1,8 +1,8 @@
 {
-  "Accuracy": 75.52,
-  "Precision": 71.36,
-  "Recall": 84.94,
-  "F1 Score": 77.56,
-  "ROC-AUC": 84.97,
-  "Evaluated_Samples": 5000
+  "Accuracy": 57.0,
+  "Precision": 60.07,
+  "Recall": 57.0,
+  "F1 Score": 53.45,
+  "ROC-AUC": 63.8,
+  "Evaluated_Samples": 1000
 }

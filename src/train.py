@@ -5,9 +5,8 @@ Main training script — orchestrates the full pipeline:
   1. Data Ingestion
   2. EDA
   3. Preprocessing
-  4. Baseline (LR + TF-IDF)
-  5. Deep Learning (BiLSTM)
-  6. Full Evaluation & Comparison
+  4. Deep Learning (BiLSTM)
+  5. Evaluation & Comparison
 
 Run from project root:
   python src/train.py
@@ -15,12 +14,23 @@ Run from project root:
 
 import os
 import sys
+import io
 import time
 import argparse
 import pandas as pd
 
+# Ensure UTF-8 output encoding for Windows command prompt / powershell
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # Add src to path
-sys.path.insert(0, os.path.dirname(__file__))
+SRC_DIR = os.path.abspath(os.path.dirname(__file__))
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
 
 from data_ingestion import load_data
 from preprocessing  import run_preprocessing
@@ -34,8 +44,8 @@ def parse_args():
     parser.add_argument(
         "--sample-size",
         type=int,
-        default=None,
-        help="Number of records to use (e.g. 8000 for fast training, default: all 50k)",
+        default=10000,
+        help="Number of records to use (default: 10000 for balanced high accuracy & fast CPU training)",
     )
     parser.add_argument(
         "--epochs",

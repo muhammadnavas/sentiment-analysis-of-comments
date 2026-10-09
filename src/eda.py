@@ -52,16 +52,18 @@ def plot_class_distribution(df: pd.DataFrame) -> None:
         linewidth=1.5,
         width=0.4,
     )
+    max_val = max(counts.values)
+    ax.set_ylim(0, max_val * 1.25)
     for bar, val in zip(bars, counts.values):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 200,
+            val + (max_val * 0.03),
             f"{val:,}\n({val/len(df)*100:.1f}%)",
             ha="center", va="bottom", fontsize=10, fontweight="bold"
         )
-    ax.set_title("Class Distribution — E-Consultation Sentiments", fontsize=13, pad=12)
-    ax.set_xlabel("Sentiment Class", fontsize=11)
-    ax.set_ylabel("Number of Comments", fontsize=11)
+    ax.set_title("Class Distribution — E-Consultation Sentiments", fontsize=13, pad=14)
+    ax.set_xlabel("Sentiment Class", fontsize=11, labelpad=8)
+    ax.set_ylabel("Number of Comments", fontsize=11, labelpad=8)
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{int(x):,}"))
     _save(fig, "01_class_distribution.png")
 
