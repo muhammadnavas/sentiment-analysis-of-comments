@@ -709,10 +709,9 @@ elif "📈 Training Plots" in page:
     else:
         plot_names = {
             "01_class_distribution.png":  "Class Distribution",
-            "02_wordclouds.png":          "Word Clouds (Positive vs Negative)",
-            "03_training_curves.png":     "BiLSTM Training & Validation Curves",
-            "04_confusion_matrix_dl.png": "Confusion Matrix — BiLSTM Deep Learning",
-            "05_roc_auc_curve.png":       "ROC-AUC Curve — BiLSTM Deep Learning",
+            "02_training_curves.png":     "BiLSTM Training & Validation Curves",
+            "03_confusion_matrix_dl.png": "Confusion Matrix — BiLSTM Deep Learning",
+            "04_roc_auc_curve.png":       "ROC-AUC Curve — BiLSTM Deep Learning",
         }
 
         cols = st.columns(2)

@@ -231,7 +231,6 @@ def run_eda(df: pd.DataFrame) -> None:
     print("[EDA] Starting Exploratory Data Analysis...\n")
     print_summary_stats(df)
     plot_class_distribution(df)
-    plot_wordclouds(df)
     print(f"\n[EDA] Essential plots saved to: {os.path.abspath(PLOTS_DIR)}\n")
 
 

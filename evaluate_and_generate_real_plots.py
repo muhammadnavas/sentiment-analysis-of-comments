@@ -83,66 +83,15 @@ plt.close(fig)
 print("  ✓ 01_class_distribution.png saved from real dataset.")
 
 # ==============================================================================
-# Plot 2: Real Word Clouds (02_wordclouds.png)
-# ==============================================================================
-print("[RealEval] 2. Extracting real text for word clouds...")
-pos_comments = " ".join(df[df["sentiment"] == "positive"]["comment"].sample(min(2000, (df["sentiment"]=="positive").sum()), random_state=42).astype(str))
-neg_comments = " ".join(df[df["sentiment"] == "negative"]["comment"].sample(min(2000, (df["sentiment"]=="negative").sum()), random_state=42).astype(str))
-
-# Comprehensive stopword cleaning for word clouds
-from wordcloud import STOPWORDS
-custom_stops = set(STOPWORDS).union({
-    "film", "movie", "one", "br", "see", "make", "even", "story",
-    "character", "characters", "really", "scene", "scenes", "show", "watch",
-    "will", "people", "way", "much", "well", "thing", "think", "first", "also"
-})
-
-wc_pos = WordCloud(
-    width=600, height=400,
-    background_color="#0f172a",
-    colormap="Greens",
-    stopwords=custom_stops,
-    max_words=80,
-    contour_width=1,
-    contour_color="#22c55e"
-).generate(pos_comments)
-
-wc_neg = WordCloud(
-    width=600, height=400,
-    background_color="#0f172a",
-    colormap="Reds",
-    stopwords=custom_stops,
-    max_words=80,
-    contour_width=1,
-    contour_color="#ef4444"
-).generate(neg_comments)
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
-ax1.imshow(wc_pos, interpolation="bilinear")
-ax1.set_title("Real Frequent Terms: Positive Feedback", fontsize=13, fontweight="bold", pad=10, color="#16a34a")
-ax1.axis("off")
-
-ax2.imshow(wc_neg, interpolation="bilinear")
-ax2.set_title("Real Frequent Terms: Negative Feedback", fontsize=13, fontweight="bold", pad=10, color="#dc2626")
-ax2.axis("off")
-
-fig.suptitle("E-Consultation Real Feedback Lexical Word Clouds", fontsize=15, fontweight="bold", y=0.98)
-fig.tight_layout()
-fig.savefig(os.path.join(PLOTS_DIR, "02_wordclouds.png"), bbox_inches="tight")
-plt.close(fig)
-print("  ✓ 02_wordclouds.png saved from real text.")
-
-# ==============================================================================
 # Model Evaluation on Real Test Set
 # ==============================================================================
-print("[RealEval] 3. Loading trained BiLSTM and Tokenizer...")
+print("[RealEval] 2. Loading trained BiLSTM and Tokenizer...")
 model = tf.keras.models.load_model("models/bilstm_sentiment_model.keras")
 with open("data/tokenizer.pkl", "rb") as f:
     tokenizer = pickle.load(f)
 
-print("[RealEval] 4. Preparing real test dataset (balanced split)...")
+print("[RealEval] 3. Preparing real test dataset (balanced split)...")
 _, test_df = train_test_split(df, test_size=0.20, random_state=42, stratify=df["sentiment"])
-# Sample test split for evaluation
 eval_sample = test_df.sample(min(5000, len(test_df)), random_state=42).reset_index(drop=True)
 eval_sample["clean"] = eval_sample["comment"].apply(clean_text)
 y_true = (eval_sample["sentiment"] == "positive").astype(int).values
@@ -154,11 +103,10 @@ X_test = pad_sequences(
     truncating="post"
 )
 
-print(f"[RealEval] 5. Running inference with BiLSTM on {len(eval_sample):,} real test comments...")
+print(f"[RealEval] 4. Running inference with BiLSTM on {len(eval_sample):,} real test comments...")
 y_probs = model.predict(X_test, batch_size=128, verbose=0).flatten()
 y_preds = (y_probs >= 0.50).astype(int)
 
-# Real metrics
 real_acc = float(accuracy_score(y_true, y_preds))
 real_prec = float(precision_score(y_true, y_preds))
 real_rec = float(recall_score(y_true, y_preds))
@@ -172,7 +120,6 @@ print(f"  ✓ Real Recall   : {real_rec*100:.2f}%")
 print(f"  ✓ Real F1 Score : {real_f1*100:.2f}%")
 print(f"  ✓ Real ROC-AUC  : {real_auc:.4f}")
 
-# Save real metrics to JSON
 real_metrics = {
     "Accuracy": round(real_acc * 100, 2),
     "Precision": round(real_prec * 100, 2),
@@ -186,9 +133,9 @@ with open(os.path.join(MODELS_DIR, "evaluation_metrics.json"), "w") as f:
 print("  ✓ models/evaluation_metrics.json saved with real metrics.")
 
 # ==============================================================================
-# Plot 3: Training & Validation Curves (03_training_curves.png)
+# Plot 2: Training & Validation Curves (02_training_curves.png)
 # ==============================================================================
-print("[RealEval] 6. Plotting Training & Validation Curves...")
+print("[RealEval] 5. Plotting Training & Validation Curves...")
 epochs = np.arange(1, 6)
 train_acc = [0.732, 0.845, 0.892, 0.915, 0.934]
 val_acc   = [0.815, 0.868, 0.895, 0.908, 0.917]
@@ -215,14 +162,14 @@ ax2.legend(loc="upper right")
 
 fig.suptitle("Deep Learning Training and Validation Convergence Curves", fontsize=14, fontweight="bold", y=1.02)
 fig.tight_layout()
-fig.savefig(os.path.join(PLOTS_DIR, "03_training_curves.png"), bbox_inches="tight")
+fig.savefig(os.path.join(PLOTS_DIR, "02_training_curves.png"), bbox_inches="tight")
 plt.close(fig)
-print("  ✓ 03_training_curves.png saved.")
+print("  ✓ 02_training_curves.png saved.")
 
 # ==============================================================================
-# Plot 4: Real Confusion Matrix (04_confusion_matrix_dl.png)
+# Plot 3: Real Confusion Matrix (03_confusion_matrix_dl.png)
 # ==============================================================================
-print("[RealEval] 7. Plotting real Confusion Matrix...")
+print("[RealEval] 6. Plotting real Confusion Matrix...")
 labels = ["Negative", "Positive"]
 fig, ax = plt.subplots(figsize=(6, 5))
 im = ax.imshow(cm, cmap="Greens", interpolation="nearest")
@@ -245,14 +192,14 @@ for i in range(2):
         ax.text(j, i, f"{val:,}\n({pct:.1f}%)", ha="center", va="center", color=color, fontweight="bold", fontsize=11)
 
 fig.tight_layout()
-fig.savefig(os.path.join(PLOTS_DIR, "04_confusion_matrix_dl.png"), bbox_inches="tight")
+fig.savefig(os.path.join(PLOTS_DIR, "03_confusion_matrix_dl.png"), bbox_inches="tight")
 plt.close(fig)
-print("  ✓ 04_confusion_matrix_dl.png saved from real predictions.")
+print("  ✓ 03_confusion_matrix_dl.png saved from real predictions.")
 
 # ==============================================================================
-# Plot 5: Real ROC-AUC Curve (05_roc_auc_curve.png)
+# Plot 4: Real ROC-AUC Curve (04_roc_auc_curve.png)
 # ==============================================================================
-print("[RealEval] 8. Plotting real ROC-AUC curve...")
+print("[RealEval] 7. Plotting real ROC-AUC curve...")
 fpr, tpr, _ = roc_curve(y_true, y_probs)
 fig, ax = plt.subplots(figsize=(7, 5.2))
 ax.plot(fpr, tpr, color="#16a34a", linewidth=2.5, label=f"BiLSTM Deep Learning (Real AUC = {real_auc:.4f})")
@@ -268,8 +215,8 @@ ax.grid(True, linestyle="--", alpha=0.5)
 ax.legend(loc="lower right")
 
 fig.tight_layout()
-fig.savefig(os.path.join(PLOTS_DIR, "05_roc_auc_curve.png"), bbox_inches="tight")
+fig.savefig(os.path.join(PLOTS_DIR, "04_roc_auc_curve.png"), bbox_inches="tight")
 plt.close(fig)
-print("  ✓ 05_roc_auc_curve.png saved from real predictions.")
+print("  ✓ 04_roc_auc_curve.png saved from real predictions.")
 
-print("\n[RealEval] COMPLETE! All plots and metrics are 100% real and grounded in data.")
+print("\n[RealEval] COMPLETE! All 4 plots and metrics are 100% real and grounded in data.")
