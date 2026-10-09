@@ -305,27 +305,14 @@ div[data-testid="stDataFrame"] {
 # Helper Functions
 # ─────────────────────────────────────────────
 
-@st.cache_resource(show_spinner="Loading AI model bundle...")
+@st.cache_resource(show_spinner="Loading Deep Learning Model...")
 def load_all_models():
-    """Loads both Deep Learning (BiLSTM) and Calibrated Baseline (LR + TF-IDF) models."""
+    """Loads Deep Learning (BiLSTM) model and Tokenizer."""
     bundle = {
         "dl_model": None,
         "tokenizer": None,
-        "lr_model": None,
-        "vectorizer": None,
         "ready": False,
     }
-
-    # Load Baseline LR + TF-IDF
-    if os.path.exists(BASELINE_MODEL_PATH) and os.path.exists(VECTORIZER_PATH):
-        try:
-            with open(BASELINE_MODEL_PATH, "rb") as f:
-                bundle["lr_model"] = pickle.load(f)
-            with open(VECTORIZER_PATH, "rb") as f:
-                bundle["vectorizer"] = pickle.load(f)
-            bundle["ready"] = True
-        except Exception:
-            pass
 
     # Load BiLSTM + Tokenizer
     if os.path.exists(MODEL_PATH) and os.path.exists(TOKENIZER_PATH):
@@ -351,17 +338,12 @@ def clean_text(text: str) -> str:
     return text
 
 
-def predict_sentiment(text: str, bundle: dict, engine: str = "⚡ Logistic Regression") -> dict:
+def predict_sentiment(text: str, bundle: dict, engine: str = "🧠 BiLSTM Deep Learning") -> dict:
     """
-    Predicts sentiment using selected engine (LR, BiLSTM, or Hybrid Ensemble).
+    Predicts sentiment exclusively using the BiLSTM Deep Learning model.
     """
     cleaned = clean_text(text)
-    prob_lr = None
-    prob_dl = None
-
-    if bundle["lr_model"] and bundle["vectorizer"]:
-        vec = bundle["vectorizer"].transform([cleaned])
-        prob_lr = float(bundle["lr_model"].predict_proba(vec)[0][1])
+    prob_dl = 0.50
 
     if bundle["dl_model"] and bundle["tokenizer"]:
         from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -369,32 +351,13 @@ def predict_sentiment(text: str, bundle: dict, engine: str = "⚡ Logistic Regre
         padded = pad_sequences(seq, maxlen=MAX_SEQ_LEN, padding="post", truncating="post")
         prob_dl = float(bundle["dl_model"].predict(padded, verbose=0)[0][0])
 
-    if "BiLSTM" in engine and prob_dl is not None:
-        prob = prob_dl
-    elif "Ensemble" in engine:
-        if prob_lr is not None and prob_dl is not None:
-            prob = 0.70 * prob_lr + 0.30 * prob_dl
-        elif prob_lr is not None:
-            prob = prob_lr
-        elif prob_dl is not None:
-            prob = prob_dl
-        else:
-            prob = 0.50
-    else:  # Logistic Regression (default)
-        if prob_lr is not None:
-            prob = prob_lr
-        elif prob_dl is not None:
-            prob = prob_dl
-        else:
-            prob = 0.50
-
+    prob = prob_dl
     label = "Positive" if prob >= 0.50 else "Negative"
     confidence = prob if prob >= 0.50 else 1.0 - prob
     return {
         "label": label,
         "confidence": confidence,
         "probability": prob,
-        "prob_lr": prob_lr,
         "prob_dl": prob_dl,
     }
 
@@ -468,21 +431,26 @@ with st.sidebar:
     )
 
     st.markdown("---")
-    st.markdown("## 🤖 AI Classifier Engine")
-    engine = st.selectbox(
-        "Active Classifier",
-        [
-            "⚡ Logistic Regression + TF-IDF (Calibrated 98%)",
-            "🤝 Hybrid Ensemble (BiLSTM + LR)",
-            "🧠 BiLSTM Deep Learning",
-        ],
-        index=0,
-    )
+    st.markdown("## 🧠 Active AI Model")
+    st.markdown("""
+    <div style='background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 12px; padding: 12px 14px;'>
+        <div style='color: #c084fc; font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;'>
+            🧠 BiLSTM Neural Network
+        </div>
+        <div style='color: #94a3b8; font-size: 0.78rem; margin-top: 4px; line-height: 1.4;'>
+            Bidirectional Long Short-Term Memory Deep Learning Model
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    engine = "🧠 BiLSTM Deep Learning"
 
     st.markdown("---")
     st.markdown(
         "<div style='color: rgba(255,255,255,0.3); font-size: 0.75rem; text-align:center;'>"
         "Deep Learning Mini Project<br>E-Consultation Sentiment Analysis<br>TensorFlow · Keras · Streamlit"
+        "</div>",
+        unsafe_allow_html=True,
+    )
         "</div>",
         unsafe_allow_html=True,
     )
@@ -501,7 +469,7 @@ model_ready   = models_bundle["ready"]
 st.markdown("""
 <div style='padding: 16px 0 8px 0;'>
     <div class='hero-title'>🏥 E-Consultation Sentiment Analyzer</div>
-    <div class='hero-subtitle'>AI-powered analysis of patient feedback using Bidirectional LSTM & Calibrated ML</div>
+    <div class='hero-subtitle'>AI-powered analysis of patient feedback using Bidirectional LSTM Deep Learning</div>
 </div>
 <div class='gradient-divider'></div>
 """, unsafe_allow_html=True)
