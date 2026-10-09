@@ -723,7 +723,7 @@ elif "📈 Training Plots" in page:
                 st.markdown(f"**{title}**")
                 try:
                     img = Image.open(path)
-                    st.image(img, use_column_width=True)
+                    st.image(img, use_container_width=True)
                 except Exception:
                     st.error(f"Could not load: {fname}")
                 st.markdown("<br>", unsafe_allow_html=True)

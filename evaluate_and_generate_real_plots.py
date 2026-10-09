@@ -89,8 +89,13 @@ print("[RealEval] 2. Extracting real text for word clouds...")
 pos_comments = " ".join(df[df["sentiment"] == "positive"]["comment"].sample(min(2000, (df["sentiment"]=="positive").sum()), random_state=42).astype(str))
 neg_comments = " ".join(df[df["sentiment"] == "negative"]["comment"].sample(min(2000, (df["sentiment"]=="negative").sum()), random_state=42).astype(str))
 
-# Basic stopword cleaning for word clouds
-custom_stops = {"film", "movie", "one", "br", "see", "make", "even", "story", "character", "characters", "really", "scene", "scenes"}
+# Comprehensive stopword cleaning for word clouds
+from wordcloud import STOPWORDS
+custom_stops = set(STOPWORDS).union({
+    "film", "movie", "one", "br", "see", "make", "even", "story",
+    "character", "characters", "really", "scene", "scenes", "show", "watch",
+    "will", "people", "way", "much", "well", "thing", "think", "first", "also"
+})
 
 wc_pos = WordCloud(
     width=600, height=400,
