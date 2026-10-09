@@ -134,7 +134,7 @@ def split_data(
         random_state=RANDOM_SEED,
     )
     print(
-        f"[INFO] Split → Train: {len(train_df):,} | "
+        f"[INFO] Split -> Train: {len(train_df):,} | "
         f"Val: {len(val_df):,} | Test: {len(test_df):,}"
     )
     return train_df.reset_index(drop=True), val_df.reset_index(drop=True), test_df.reset_index(drop=True)
@@ -244,7 +244,7 @@ def run_preprocessing(df: pd.DataFrame):
     y_val   = val_df["label"].values
     y_test  = test_df["label"].values
 
-    print("[INFO] Preprocessing complete ✓")
+    print("[INFO] Preprocessing complete [DONE]")
     return {
         "X_train": X_train, "y_train": y_train,
         "X_val":   X_val,   "y_val":   y_val,

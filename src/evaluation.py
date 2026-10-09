@@ -6,6 +6,16 @@ Confusion Matrix, ROC-AUC curve, and Baseline vs. DL comparison chart.
 """
 
 import os
+import sys
+
+# Ensure UTF-8 output encoding for Windows command prompt / powershell
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -184,7 +194,7 @@ def evaluate_dl_model(
         dict: All computed metrics including probabilities.
     """
     print("[Eval] Evaluating BiLSTM on test set...")
-    y_prob = model.predict(X_test, verbose=1).flatten()
+    y_prob = model.predict(X_test, verbose=0).flatten()
     y_pred = (y_prob >= threshold).astype(int)
 
     metrics = compute_metrics(y_test, y_pred, y_prob, model_name="BiLSTM")
