@@ -450,9 +450,6 @@ with st.sidebar:
         "</div>",
         unsafe_allow_html=True,
     )
-        "</div>",
-        unsafe_allow_html=True,
-    )
 
 
 # ─────────────────────────────────────────────
@@ -659,21 +656,21 @@ elif "📊 Model Dashboard" in page:
             line=dict(color="rgba(255,255,255,0.2)", width=1)
         ),
         text=[f"{dl_metrics[k]:.1f}%" for k in labels],
-        textposition="inside",
-        textfont=dict(color="white", size=13),
+        textposition="outside",
+        textfont=dict(color="white", size=12),
     ))
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="white"),
         yaxis=dict(
-            range=[80, 102],
+            range=[0, 105],
             title="Score (%)",
             gridcolor="rgba(255,255,255,0.08)",
             ticksuffix="%",
         ),
         xaxis=dict(title="Evaluation Metric"),
-        height=360,
+        height=380,
         margin=dict(l=20, r=20, t=20, b=20),
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
