@@ -18,10 +18,6 @@ env/
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# Data (large files — download via script)
-data/raw_reviews.csv
-data/processed_reviews.csv
-data/*.parquet
 
 # Trained model weights (large — use Git LFS or upload separately)
 models/*.h5
@@ -44,6 +40,4 @@ desktop.ini
 *.swp
 *.swo
 
-# Keep DL model and tokenizer
-!data/tokenizer.pkl
-!models/bilstm_sentiment_model.keras
+
